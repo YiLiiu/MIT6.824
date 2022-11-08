@@ -4,14 +4,20 @@ package shardmaster
 // Shardmaster clerk.
 //
 
-import "../labrpc"
-import "time"
-import "crypto/rand"
-import "math/big"
+import (
+	"crypto/rand"
+	"math/big"
+	"sync/atomic"
+	"time"
+
+	"6.824/src/labrpc"
+)
 
 type Clerk struct {
 	servers []*labrpc.ClientEnd
 	// Your data here.
+	clientId  int64
+	commandId int64
 }
 
 func nrand() int64 {
@@ -25,6 +31,8 @@ func MakeClerk(servers []*labrpc.ClientEnd) *Clerk {
 	ck := new(Clerk)
 	ck.servers = servers
 	// Your code here.
+	ck.clientId = nrand()
+	ck.commandId = 0
 	return ck
 }
 
@@ -48,6 +56,8 @@ func (ck *Clerk) Query(num int) Config {
 func (ck *Clerk) Join(servers map[int][]string) {
 	args := &JoinArgs{}
 	// Your code here.
+	args.clientId = ck.clientId
+	args.commandId = atomic.AddInt64(&ck.commandId, 1)
 	args.Servers = servers
 
 	for {
@@ -66,6 +76,8 @@ func (ck *Clerk) Join(servers map[int][]string) {
 func (ck *Clerk) Leave(gids []int) {
 	args := &LeaveArgs{}
 	// Your code here.
+	args.clientId = ck.clientId
+	args.commandId = atomic.AddInt64(&ck.commandId, 1)
 	args.GIDs = gids
 
 	for {
@@ -84,6 +96,8 @@ func (ck *Clerk) Leave(gids []int) {
 func (ck *Clerk) Move(shard int, gid int) {
 	args := &MoveArgs{}
 	// Your code here.
+	args.clientId = ck.clientId
+	args.commandId = atomic.AddInt64(&ck.commandId, 1)
 	args.Shard = shard
 	args.GID = gid
 
